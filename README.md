@@ -1,6 +1,6 @@
 # ShipAny Template One
 
-Ship Any AI SaaS Startups in hours.
+AI SaaS 模板
 
 ![preview](preview.png)
 
@@ -9,7 +9,7 @@ Ship Any AI SaaS Startups in hours.
 1. Clone the repository
 
 ```bash
-git clone https://github.com/shipanyai/shipany-template-one.git
+git clone https://github.com/prince121212/pc-t
 ```
 
 2. Install dependencies

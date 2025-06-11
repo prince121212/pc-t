@@ -1,6 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
+// 原本仅支持AWS S3，现在支持其他存储服务 先尝试接入腾讯云COS
 interface StorageConfig {
   endpoint: string;
   region: string;
@@ -24,6 +25,7 @@ export class Storage {
         secretAccessKey:
           config?.secretKey || process.env.STORAGE_SECRET_KEY || "",
       },
+      forcePathStyle: true, // 启用路径式寻址以兼容腾讯云 COS 如果是用AWS S3的话可以删除这行
     });
   }
 
