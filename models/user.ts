@@ -1,6 +1,7 @@
 import { User } from "@/types/user";
 import { getIsoTimestr } from "@/lib/time";
-import { getSupabaseClient } from "./db";
+import { getSupabaseClient, resetSupabaseClient } from "./db";
+import { log } from "@/lib/logger";
 
 export async function insertUser(user: User) {
   const supabase = getSupabaseClient();
@@ -16,34 +17,141 @@ export async function insertUser(user: User) {
 export async function findUserByEmail(
   email: string
 ): Promise<User | undefined> {
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .limit(1)
-    .single();
-
-  if (error) {
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    log.error("Invalid email format", undefined, { email });
     return undefined;
   }
 
-  return data;
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      log.debug(`开始查询用户 (尝试 ${attempt}/${maxRetries})`, { email, function: 'findUserByEmail' });
+
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email.toLowerCase().trim())
+        .limit(1)
+        .single();
+
+      if (error) {
+        // PGRST116 是 "not found" 错误，这是正常的，不需要重试
+        if (error.code === 'PGRST116') {
+          console.log(`[findUserByEmail] 用户不存在 (尝试 ${attempt}), Email:`, email);
+          return undefined;
+        }
+
+        console.error(`[findUserByEmail] 数据库查询错误 (尝试 ${attempt}):`, {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          email
+        });
+
+        // 如果是网络错误或超时错误且还有重试机会，继续重试
+        const isRetryableError = error.message.includes('fetch failed') ||
+                                error.message.includes('network') ||
+                                error.message.includes('TimeoutError') ||
+                                error.message.includes('timeout');
+
+        if (attempt < maxRetries && isRetryableError) {
+          lastError = error;
+          const retryDelay = attempt === 1 ? 500 : 1000;
+          console.log(`[findUserByEmail] 网络/超时错误，${retryDelay}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+
+        // 其他错误直接返回 undefined
+        return undefined;
+      }
+
+      console.log(`[findUserByEmail] 查询成功 (尝试 ${attempt}), 找到用户:`, !!data);
+      return data;
+    } catch (e) {
+      console.error(`[findUserByEmail] 查询异常 (尝试 ${attempt}):`, e, "Email:", email);
+      lastError = e;
+
+      // 如果还有重试机会，继续重试
+      if (attempt < maxRetries) {
+        const retryDelay = attempt === 1 ? 500 : 1000;
+        console.log(`[findUserByEmail] 异常错误，${retryDelay}ms 后重试...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        continue;
+      }
+    }
+  }
+
+  console.error(`[findUserByEmail] 所有重试都失败了, Email: ${email}, 最后错误:`, lastError);
+  return undefined;
 }
 
 export async function findUserByUuid(uuid: string): Promise<User | undefined> {
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("uuid", uuid)
-    .single();
+  const maxRetries = 3;
+  let lastError: any = null;
 
-  if (error) {
-    return undefined;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[findUserByUuid] 开始查询用户 (尝试 ${attempt}/${maxRetries}), UUID:`, uuid);
+
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("uuid", uuid)
+        .single();
+
+      if (error) {
+        console.error(`[findUserByUuid] 数据库查询错误 (尝试 ${attempt}):`, {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          uuid
+        });
+
+        // 如果是网络错误或超时错误且还有重试机会，继续重试
+        const isRetryableError = error.message.includes('fetch failed') ||
+                                error.message.includes('network') ||
+                                error.message.includes('TimeoutError') ||
+                                error.message.includes('timeout');
+
+        if (attempt < maxRetries && isRetryableError) {
+          lastError = error;
+          // 使用更短的重试间隔：500ms, 1000ms
+          const retryDelay = attempt === 1 ? 500 : 1000;
+          console.log(`[findUserByUuid] 网络/超时错误，${retryDelay}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+
+        return undefined;
+      }
+
+      console.log(`[findUserByUuid] 查询成功 (尝试 ${attempt}), 找到用户:`, !!data);
+      return data;
+    } catch (e) {
+      console.error(`[findUserByUuid] 查询异常 (尝试 ${attempt}):`, e, "UUID:", uuid);
+      lastError = e;
+
+      // 如果还有重试机会，继续重试
+      if (attempt < maxRetries) {
+        const retryDelay = attempt === 1 ? 500 : 1000;
+        console.log(`[findUserByUuid] 异常错误，${retryDelay}ms 后重试...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        continue;
+      }
+    }
   }
 
-  return data;
+  console.error(`[findUserByUuid] 所有重试都失败了, UUID: ${uuid}, 最后错误:`, lastError);
+  return undefined;
 }
 
 export async function getUsers(
@@ -144,4 +252,178 @@ export async function getUserUuidsByEmail(email: string) {
   }
 
   return data.map((user) => user.uuid);
+}
+
+/**
+ * 创建邮箱注册用户
+ */
+export async function createEmailUser(user: User & { password_hash: string }) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.from("users").insert({
+    ...user,
+    signin_type: 'email',
+    signin_provider: 'email',
+    // 保持传入的 email_verified 状态，不强制覆盖
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * 验证用户邮箱
+ */
+export async function verifyUserEmail(email: string) {
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error("Invalid email format");
+  }
+
+  const supabase = getSupabaseClient();
+  const updated_at = getIsoTimestr();
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      email_verified: true,
+      email_verified_at: updated_at,
+      updated_at,
+    })
+    .eq("email", email.toLowerCase().trim())
+    .eq("signin_provider", "email");
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * 根据邮箱查找邮箱注册用户
+ */
+export async function findEmailUser(email: string): Promise<User | undefined> {
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    console.error("Invalid email format:", email);
+    return undefined;
+  }
+
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[findEmailUser] 开始查询邮箱用户 (尝试 ${attempt}/${maxRetries}), Email:`, email);
+
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email.toLowerCase().trim())
+        .eq("signin_provider", "email")
+        .limit(1)
+        .single();
+
+      if (error) {
+        // PGRST116 是 "not found" 错误，这是正常的，不需要重试
+        if (error.code === 'PGRST116') {
+          console.log(`[findEmailUser] 用户不存在 (尝试 ${attempt}), Email:`, email);
+          return undefined;
+        }
+
+        console.error(`[findEmailUser] 数据库查询错误 (尝试 ${attempt}):`, {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          email
+        });
+
+        // 如果是网络错误或超时错误且还有重试机会，继续重试
+        const isRetryableError = error.message.includes('fetch failed') ||
+                                error.message.includes('network') ||
+                                error.message.includes('TimeoutError') ||
+                                error.message.includes('timeout');
+
+        if (attempt < maxRetries && isRetryableError) {
+          lastError = error;
+          // 使用指数退避：2s, 4s
+          const retryDelay = Math.pow(2, attempt) * 1000;
+          console.log(`[findEmailUser] 网络/超时错误，${retryDelay}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+
+        // 其他错误直接返回 undefined
+        return undefined;
+      }
+
+      console.log(`[findEmailUser] 查询成功 (尝试 ${attempt}), 找到用户:`, !!data);
+      return data;
+    } catch (e) {
+      console.error(`[findEmailUser] 查询异常 (尝试 ${attempt}):`, e, "Email:", email);
+      lastError = e;
+
+      // 如果还有重试机会，继续重试
+      if (attempt < maxRetries) {
+        const retryDelay = Math.pow(2, attempt) * 1000;
+        console.log(`[findEmailUser] 异常错误，${retryDelay}ms 后重试...`);
+
+        // 如果是第二次重试，重置数据库连接
+        if (attempt === 2) {
+          console.log("[findEmailUser] 重置数据库连接");
+          resetSupabaseClient();
+        }
+
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        continue;
+      }
+    }
+  }
+
+  console.error(`[findEmailUser] 所有重试都失败了, Email: ${email}, 最后错误:`, lastError);
+  console.error(`[findEmailUser] 建议检查：
+    1. Supabase 数据库连接状态
+    2. 网络连接稳定性
+    3. 数据库连接池配置
+    4. 是否需要升级 Supabase 计划`);
+  return undefined;
+}
+
+/**
+ * 更新用户密码
+ */
+export async function updateUserPassword(email: string, password_hash: string) {
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error("Invalid email format");
+  }
+
+  // 验证密码哈希不为空
+  if (!password_hash || password_hash.trim().length === 0) {
+    throw new Error("Password hash cannot be empty");
+  }
+
+  const supabase = getSupabaseClient();
+  const updated_at = getIsoTimestr();
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      password_hash,
+      updated_at,
+    })
+    .eq("email", email.toLowerCase().trim())
+    .eq("signin_provider", "email");
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }

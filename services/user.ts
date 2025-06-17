@@ -7,11 +7,14 @@ import { getOneYearLaterTimestr } from "@/lib/time";
 import { getUserUuidByApiKey } from "@/models/apikey";
 import { headers } from "next/headers";
 import { increaseCredits } from "./credit";
+import { emailService } from "./email";
 
 export async function saveUser(user: User) {
   try {
     const existUser = await findUserByEmail(user.email);
-    if (!existUser) {
+    const isNewUser = !existUser;
+
+    if (isNewUser) {
       await insertUser(user);
 
       // increase credits for new user, expire in one year
@@ -21,6 +24,21 @@ export async function saveUser(user: User) {
         credits: CreditsAmount.NewUserGet,
         expired_at: getOneYearLaterTimestr(),
       });
+
+      // 发送欢迎邮件（非阻塞）
+      if (user.email && user.uuid) {
+        emailService.sendWelcomeEmail(user.email, user.nickname || undefined)
+          .then((success) => {
+            if (success) {
+              console.log(`欢迎邮件发送成功: ${user.email}`);
+            } else {
+              console.log(`欢迎邮件发送失败: ${user.email}`);
+            }
+          })
+          .catch((error) => {
+            console.error(`欢迎邮件发送异常: ${user.email}`, error);
+          });
+      }
     } else {
       user.id = existUser.id;
       user.uuid = existUser.uuid;

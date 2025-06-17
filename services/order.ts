@@ -8,6 +8,8 @@ import { getIsoTimestr, getOneYearLaterTimestr } from "@/lib/time";
 
 import Stripe from "stripe";
 import { updateAffiliateForOrder } from "./affiliate";
+import { emailService } from "./email";
+import { findUserByUuid } from "@/models/user";
 
 export async function handleOrderSession(session: Stripe.Checkout.Session) {
   try {
@@ -41,6 +43,30 @@ export async function handleOrderSession(session: Stripe.Checkout.Session) {
 
       // update affiliate for paied order
       await updateAffiliateForOrder(order);
+
+      // 发送订单确认邮件（非阻塞）
+      const emailTo = paid_email || order.user_email || '';
+      if (emailTo) {
+        // 获取用户信息
+        const user = await findUserByUuid(order.user_uuid);
+
+        emailService.sendOrderConfirmationEmail(emailTo, {
+          orderNo: order.order_no,
+          amount: order.amount / 100, // 转换为元
+          credits: order.credits,
+          userName: user?.nickname || undefined,
+        })
+          .then((success) => {
+            if (success) {
+              console.log(`订单确认邮件发送成功: ${emailTo} - ${order_no}`);
+            } else {
+              console.log(`订单确认邮件发送失败: ${emailTo} - ${order_no}`);
+            }
+          })
+          .catch((error) => {
+            console.error(`订单确认邮件发送异常: ${emailTo} - ${order_no}`, error);
+          });
+      }
     }
 
     console.log(

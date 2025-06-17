@@ -28,6 +28,32 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // 在客户端构建中排除 Node.js 模块
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        os: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        url: false,
+        querystring: false,
+        path: false,
+        child_process: false,
+        nodemailer: false,
+      };
+
+      // 排除 nodemailer 包
+      config.externals = config.externals || [];
+      config.externals.push('nodemailer');
+    }
+    return config;
+  },
   async redirects() {
     return [];
   },

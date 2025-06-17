@@ -27,6 +27,7 @@
     "continue": "Continue",
     "no_account": "Don't have an account?",
     "email_sign_in": "Sign in with Email",
+    "email_register": "Register with Email",
     "google_sign_in": "Sign in with Google",
     "github_sign_in": "Sign in with GitHub",
     "close_title": "Close",

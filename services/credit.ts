@@ -30,12 +30,17 @@ export async function getUserCredits(user_uuid: string): Promise<UserCredits> {
   };
 
   try {
+    console.log("[getUserCredits] 开始获取用户积分, UUID:", user_uuid);
+
     const first_paid_order = await getFirstPaidOrderByUserUuid(user_uuid);
     if (first_paid_order) {
       user_credits.is_recharged = true;
+      console.log("[getUserCredits] 用户已充值");
     }
 
     const credits = await getUserValidCredits(user_uuid);
+    console.log("[getUserCredits] 获取有效积分记录:", credits?.length || 0, "条");
+
     if (credits) {
       credits.forEach((v: Credit) => {
         user_credits.left_credits += v.credits;
@@ -50,9 +55,10 @@ export async function getUserCredits(user_uuid: string): Promise<UserCredits> {
       user_credits.is_pro = true;
     }
 
+    console.log("[getUserCredits] 积分计算完成:", user_credits);
     return user_credits;
   } catch (e) {
-    console.log("get user credits failed: ", e);
+    console.error("[getUserCredits] 获取用户积分失败, UUID:", user_uuid, "错误:", e);
     return user_credits;
   }
 }

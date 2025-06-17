@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SiGithub, SiGoogle } from "react-icons/si";
+import { MdEmail } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,12 +17,34 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import EmailLoginForm from "./email-login-form";
+import EmailRegisterForm from "./email-register-form";
 
 export default function SignForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const t = useTranslations();
+  const [mode, setMode] = useState<'main' | 'email-login' | 'email-register'>('main');
+
+  if (mode === 'email-login') {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <EmailLoginForm
+          onBack={() => setMode('main')}
+          onRegister={() => setMode('email-register')}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'email-register') {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <EmailRegisterForm onBack={() => setMode('main')} />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -36,6 +60,16 @@ export default function SignForm({
         <CardContent>
           <div className="grid gap-6">
             <div className="flex flex-col gap-4">
+              {/* 邮箱登录按钮 */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setMode('email-login')}
+              >
+                <MdEmail className="w-4 h-4" />
+                {t("sign_modal.email_sign_in")}
+              </Button>
+
               {process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true" && (
                 <Button
                   variant="outline"

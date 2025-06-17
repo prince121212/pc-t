@@ -57,6 +57,11 @@ export default async function AdminLayout({
           url: "/admin/feedbacks",
           icon: "RiMessage2Line",
         },
+        {
+          title: "邮件服务管理",
+          url: "/admin/email",
+          icon: "RiMailLine",
+        },
       ],
     },
     social: {

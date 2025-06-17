@@ -6,6 +6,8 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
+  useCallback,
 } from "react";
 import { cacheGet, cacheRemove } from "@/lib/cache";
 
@@ -36,11 +38,15 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
   const [showSignModal, setShowSignModal] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState<boolean>(false);
 
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
 
-  const fetchUserInfo = async function () {
+  const fetchUserInfo = useCallback(async function () {
     try {
+      setUserLoading(true);
+      console.log("[fetchUserInfo] 开始获取用户信息");
+
       const resp = await fetch("/api/get-user-info", {
         method: "POST",
       });
@@ -55,18 +61,20 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setUser(data);
+      console.log("[fetchUserInfo] 用户信息获取成功");
 
       updateInvite(data);
     } catch (e) {
-      console.log("fetch user info failed");
+      console.error("fetch user info failed", e);
+    } finally {
+      setUserLoading(false);
     }
-  };
+  }, []);
 
-  const updateInvite = async (user: User) => {
+  const updateInvite = useCallback(async (user: User) => {
     try {
       if (user.invited_by) {
         // user already been invited
-        console.log("user already been invited", user.invited_by);
         return;
       }
 
@@ -82,12 +90,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
       if (timeDiff <= 0 || timeDiff > 7200) {
         // user created more than 2 hours
-        console.log("user created more than 2 hours");
         return;
       }
 
       // update invite relation
-      console.log("update invite", inviteCode, user.uuid);
       const req = {
         invite_code: inviteCode,
         user_uuid: user.uuid,
@@ -110,29 +116,37 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       setUser(data);
       cacheRemove(CacheKey.InviteCode);
     } catch (e) {
-      console.log("update invite failed: ", e);
+      console.error("update invite failed: ", e);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (session && session.user) {
       fetchUserInfo();
     }
-  }, [session]);
+  }, [session, fetchUserInfo]);
+
+  // 使用 useMemo 优化 context value
+  const contextValue = useMemo(() => ({
+    theme,
+    setTheme,
+    showSignModal,
+    setShowSignModal,
+    user,
+    setUser,
+    userLoading,
+    showFeedback,
+    setShowFeedback,
+  }), [
+    theme,
+    showSignModal,
+    user,
+    userLoading,
+    showFeedback,
+  ]);
 
   return (
-    <AppContext.Provider
-      value={{
-        theme,
-        setTheme,
-        showSignModal,
-        setShowSignModal,
-        user,
-        setUser,
-        showFeedback,
-        setShowFeedback,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
