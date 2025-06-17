@@ -13,9 +13,10 @@ import { useAppContext } from "@/contexts/app";
 interface EmailLoginFormProps {
   onBack: () => void;
   onRegister: () => void;
+  onForgotPassword: () => void;
 }
 
-export default function EmailLoginForm({ onBack, onRegister }: EmailLoginFormProps) {
+export default function EmailLoginForm({ onBack, onRegister, onForgotPassword }: EmailLoginFormProps) {
   const t = useTranslations();
   const { setShowSignModal } = useAppContext();
   const [loading, setLoading] = useState(false);
@@ -104,10 +105,7 @@ export default function EmailLoginForm({ onBack, onRegister }: EmailLoginFormPro
               <button
                 type="button"
                 className="ml-auto text-sm underline-offset-4 hover:underline"
-                onClick={() => {
-                  // TODO: 实现忘记密码功能
-                  toast.info("忘记密码功能即将上线");
-                }}
+                onClick={onForgotPassword}
               >
                 忘记密码？
               </button>

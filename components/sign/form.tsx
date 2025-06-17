@@ -19,13 +19,14 @@ import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import EmailLoginForm from "./email-login-form";
 import EmailRegisterForm from "./email-register-form";
+import ForgotPasswordForm from "./forgot-password-form";
 
 export default function SignForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const t = useTranslations();
-  const [mode, setMode] = useState<'main' | 'email-login' | 'email-register'>('main');
+  const [mode, setMode] = useState<'main' | 'email-login' | 'email-register' | 'forgot-password'>('main');
 
   if (mode === 'email-login') {
     return (
@@ -33,6 +34,7 @@ export default function SignForm({
         <EmailLoginForm
           onBack={() => setMode('main')}
           onRegister={() => setMode('email-register')}
+          onForgotPassword={() => setMode('forgot-password')}
         />
       </div>
     );
@@ -42,6 +44,17 @@ export default function SignForm({
     return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>
         <EmailRegisterForm onBack={() => setMode('main')} />
+      </div>
+    );
+  }
+
+  if (mode === 'forgot-password') {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <ForgotPasswordForm
+          onBack={() => setMode('email-login')}
+          onSuccess={() => setMode('email-login')}
+        />
       </div>
     );
   }
