@@ -41,7 +41,12 @@ export default function Feedback({
     }
 
     if (!feedback.trim()) {
-      toast.error("Please enter your feedback");
+      toast.error(t("feedback.error_empty"));
+      return;
+    }
+
+    if (feedback.trim().length > 1000) {
+      toast.error(t("feedback.error_too_long"));
       return;
     }
 
@@ -55,26 +60,32 @@ export default function Feedback({
 
       const resp = await fetch("/api/add-feedback", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(req),
       });
+
+      const result = await resp.json();
+
       if (!resp.ok) {
-        toast.error("Submit failed with status " + resp.status);
+        toast.error(result.message || `提交失败 (${resp.status})`);
         return;
       }
 
-      const { code, message } = await resp.json();
-      if (code !== 0) {
-        toast.error(message);
+      if (result.code !== 0) {
+        toast.error(result.message || "提交失败");
         return;
       }
 
-      toast.success("Thank you for your feedback!");
+      toast.success(t("feedback.success"));
 
       setFeedback("");
-      setRating(null);
+      setRating(10); // 重置为默认评分
       setShowFeedback(false);
     } catch (error) {
-      toast.error("Failed to submit, please try again later");
+      console.error("反馈提交异常:", error);
+      toast.error(t("feedback.error_network"));
     } finally {
       setLoading(false);
     }

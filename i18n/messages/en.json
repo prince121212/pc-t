@@ -121,6 +121,10 @@
     "loading": "Submitting...",
     "contact_tip": "Other ways to contact us",
     "rating_tip": "How do you feel about ShipAny?",
-    "placeholder": "Leave your words here..."
+    "placeholder": "Leave your words here...",
+    "success": "Thank you for your feedback!",
+    "error_empty": "Please enter your feedback",
+    "error_too_long": "Feedback is too long, maximum 1000 characters",
+    "error_network": "Network error, please try again later"
   }
 }
