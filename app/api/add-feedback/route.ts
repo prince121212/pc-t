@@ -6,7 +6,8 @@ import { getUserUuid } from "@/services/user";
 import { insertFeedback } from "@/models/feedback";
 import { log } from "@/lib/logger";
 
-export const runtime = "edge";
+// 移除 edge runtime 以避免 nodemailer 兼容性问题
+// export const runtime = "edge";
 
 export async function POST(req: Request) {
   let content = '';
