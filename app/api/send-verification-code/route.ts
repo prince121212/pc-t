@@ -41,13 +41,7 @@ function startCleanupTimer() {
   }
 }
 
-// 停止清理定时器（用于测试或优雅关闭）
-function stopCleanupTimer() {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
-  }
-}
+
 
 // 检查发送频率限制
 function checkRateLimit(ip: string, email: string): boolean {
@@ -215,5 +209,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 导出清理函数供测试或其他模块使用
-export { stopCleanupTimer, cleanupRateLimit };
+// 注意：在Next.js API路由中，只能导出HTTP方法函数
+// 如果需要在测试中使用这些函数，可以将它们移到单独的工具文件中
