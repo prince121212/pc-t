@@ -11,7 +11,8 @@
     "api_keys": "API Keys",
     "my_orders": "My Orders",
     "user_center": "User Center",
-    "admin_system": "Admin System"
+    "admin_system": "Admin System",
+    "profile": "Profile"
   },
   "sign_modal": {
     "sign_in_title": "Sign In",
@@ -113,6 +114,24 @@
       "pending": "Pending",
       "completed": "Completed"
     }
+  },
+  "profile": {
+    "title": "Profile",
+    "description": "Manage your personal information and preferences.",
+    "nickname": "Username",
+    "nickname_placeholder": "Enter your username",
+    "avatar": "Avatar",
+    "upload_avatar": "Upload Avatar",
+    "save": "Save",
+    "saving": "Saving...",
+    "save_success": "Saved successfully",
+    "save_failed": "Save failed",
+    "upload_success": "Avatar uploaded successfully",
+    "upload_failed": "Avatar upload failed",
+    "file_too_large": "File size cannot exceed 2MB",
+    "invalid_file_type": "Please select an image file (JPG, PNG, GIF)",
+    "nickname_required": "Username is required",
+    "nickname_too_long": "Username cannot exceed 50 characters"
   },
   "feedback": {
     "title": "Feedback",

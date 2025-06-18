@@ -11,7 +11,8 @@
     "api_keys": "API 密钥",
     "my_orders": "我的订单",
     "user_center": "用户中心",
-    "admin_system": "管理后台"
+    "admin_system": "管理后台",
+    "profile": "个人资料"
   },
   "sign_modal": {
     "sign_in_title": "登录",
@@ -113,6 +114,24 @@
       "pending": "已注册，未支付",
       "completed": "已支付"
     }
+  },
+  "profile": {
+    "title": "个人资料",
+    "description": "管理您的个人信息和偏好设置。",
+    "nickname": "用户名",
+    "nickname_placeholder": "请输入用户名",
+    "avatar": "头像",
+    "upload_avatar": "上传头像",
+    "save": "保存",
+    "saving": "保存中...",
+    "save_success": "保存成功",
+    "save_failed": "保存失败",
+    "upload_success": "头像上传成功",
+    "upload_failed": "头像上传失败",
+    "file_too_large": "文件大小不能超过2MB",
+    "invalid_file_type": "请选择图片文件（JPG、PNG、GIF）",
+    "nickname_required": "用户名不能为空",
+    "nickname_too_long": "用户名不能超过50个字符"
   },
   "feedback": {
     "title": "反馈",

@@ -427,3 +427,47 @@ export async function updateUserPassword(email: string, password_hash: string) {
 
   return data;
 }
+
+/**
+ * 更新用户个人资料
+ */
+export async function updateUserProfile(
+  user_uuid: string,
+  profile: { nickname?: string; avatar_url?: string }
+) {
+  if (!user_uuid) {
+    throw new Error("User UUID is required");
+  }
+
+  // 验证用户名
+  if (profile.nickname !== undefined) {
+    if (!profile.nickname || profile.nickname.trim().length === 0) {
+      throw new Error("Nickname cannot be empty");
+    }
+    if (profile.nickname.trim().length > 50) {
+      throw new Error("Nickname cannot exceed 50 characters");
+    }
+  }
+
+  const supabase = getSupabaseClient();
+  const updated_at = getIsoTimestr();
+  const updateData: any = { updated_at };
+
+  if (profile.nickname !== undefined) {
+    updateData.nickname = profile.nickname.trim();
+  }
+  if (profile.avatar_url !== undefined) {
+    updateData.avatar_url = profile.avatar_url;
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .update(updateData)
+    .eq("uuid", user_uuid);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
