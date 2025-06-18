@@ -14,6 +14,7 @@
 - **AI集成**: AI SDK (支持 OpenAI, DeepSeek, Replicate, Kling 等)
 - **国际化**: next-intl
 - **部署**: Vercel, Cloudflare Pages
+- **其它**: logger
 
 ## 审查重点
 请重点关注以下方面：

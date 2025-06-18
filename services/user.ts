@@ -7,6 +7,7 @@ import { getOneYearLaterTimestr } from "@/lib/time";
 import { getUserUuidByApiKey } from "@/models/apikey";
 import { headers } from "next/headers";
 import { increaseCredits } from "./credit";
+import { log } from "@/lib/logger";
 import { emailService } from "./email";
 
 export async function saveUser(user: User) {
@@ -105,4 +106,35 @@ export async function getUserInfo() {
   const user = await findUserByUuid(user_uuid);
 
   return user;
+}
+
+/**
+ * 检查当前用户是否为管理员
+ * @returns Promise<boolean> 是否为管理员
+ */
+export async function isUserAdmin(): Promise<boolean> {
+  try {
+    const user_email = await getUserEmail();
+
+    if (!user_email) {
+      log.debug("管理员权限检查 - 用户邮箱为空");
+      return false;
+    }
+
+    // 获取管理员邮箱列表
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim()).filter(Boolean);
+
+    const isAdmin = adminEmails.includes(user_email);
+
+    log.debug("管理员权限检查结果", {
+      user_email,
+      isAdmin,
+      adminEmailsCount: adminEmails.length
+    });
+
+    return isAdmin;
+  } catch (error) {
+    log.error("检查管理员权限失败", error as Error, { function: "isUserAdmin" });
+    return false;
+  }
 }
