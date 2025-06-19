@@ -1,4 +1,5 @@
 import { getTimestamp } from "./time";
+import { log } from "./logger";
 
 // get data from cache
 export const cacheGet = (key: string): string | null => {
@@ -32,7 +33,7 @@ export const cacheGet = (key: string): string | null => {
 
     return value;
   } catch (error) {
-    console.warn("Cache get error:", error);
+    log.warn("缓存获取错误", { error: error as Error, key });
     return null;
   }
 };
@@ -49,7 +50,7 @@ export const cacheSet = (key: string, value: string, expiresAt: number) => {
     const valueWithExpires = expiresAt + ":" + value;
     localStorage.setItem(key, valueWithExpires);
   } catch (error) {
-    console.warn("Cache set error:", error);
+    log.warn("缓存设置错误", { error: error as Error, key });
   }
 };
 
@@ -63,7 +64,7 @@ export const cacheRemove = (key: string) => {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.warn("Cache remove error:", error);
+    log.warn("缓存删除错误", { error: error as Error, key });
   }
 };
 
@@ -77,6 +78,6 @@ export const cacheClear = () => {
   try {
     localStorage.clear();
   } catch (error) {
-    console.warn("Cache clear error:", error);
+    log.warn("缓存清理错误", { error: error as Error });
   }
 };

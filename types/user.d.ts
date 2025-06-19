@@ -17,6 +17,7 @@ export interface User {
   email_verified?: boolean;
   email_verified_at?: string;
   password_hash?: string;
+  isAdmin?: boolean; // 管理员状态
 }
 
 export interface UserCredits {

@@ -11,5 +11,6 @@ export interface ContextValue {
   userLoading: boolean;
   showFeedback: boolean;
   setShowFeedback: (show: boolean) => void;
+  isAdmin: boolean;
   [propName: string]: any;
 }
