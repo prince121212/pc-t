@@ -89,10 +89,20 @@ NEXT_PUBLIC_AUTH_GOOGLE_ID = "your_google_client_id"
 NEXT_PUBLIC_AUTH_GOOGLE_ENABLED = "true"
 ```
 
+# 生产环境需要设置为实际域名，例如：
+# NEXTAUTH_URL = "https://yourdomain.com"
+
+# Auth.js v5 额外配置
+AUTH_TRUST_HOST = "true"
+
 #### GitHub登录
 1. 访问 [GitHub Settings](https://github.com/settings/developers)
 2. 创建新的OAuth App
 3. 设置回调URL: `http://localhost:3001/api/auth/callback/github`
+
+总结一下GitHub登录需要的配置：
+一 AUTH_TRUST_HOST 二 客户端ID 三 客户端密钥 四 主页 URL 五 授权回调 URL 六 本项目设置的开关NEXT_PUBLIC_AUTH_GITHUB_ENABLED
+第三方登录需要在部署端(vercel)设置一二三六，在GitHub设置四五
 
 ```env
 AUTH_GITHUB_ID = "your_github_app_id"
