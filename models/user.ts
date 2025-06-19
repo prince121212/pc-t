@@ -1,6 +1,6 @@
 import { User } from "@/types/user";
 import { getIsoTimestr } from "@/lib/time";
-import { getSupabaseClient, resetSupabaseClient } from "./db";
+import { getSupabaseClient, resetSupabaseClient, withRequestDeduplication, isRetryableError } from "./db";
 import { log } from "@/lib/logger";
 
 export async function insertUser(user: User) {
@@ -93,10 +93,12 @@ export async function findUserByEmail(
 }
 
 export async function findUserByUuid(uuid: string): Promise<User | undefined> {
-  const maxRetries = 3;
-  let lastError: any = null;
+  // 使用请求去重，避免同时查询相同用户
+  return withRequestDeduplication(`findUser:${uuid}`, async () => {
+    const maxRetries = 3;
+    let lastError: any = null;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`[findUserByUuid] 开始查询用户 (尝试 ${attempt}/${maxRetries}), UUID:`, uuid);
 
@@ -117,16 +119,18 @@ export async function findUserByUuid(uuid: string): Promise<User | undefined> {
         });
 
         // 如果是网络错误或超时错误且还有重试机会，继续重试
-        const isRetryableError = error.message.includes('fetch failed') ||
-                                error.message.includes('network') ||
-                                error.message.includes('TimeoutError') ||
-                                error.message.includes('timeout');
-
-        if (attempt < maxRetries && isRetryableError) {
+        if (attempt < maxRetries && isRetryableError(error)) {
           lastError = error;
-          // 使用更短的重试间隔：500ms, 1000ms
+          // 使用渐进的重试间隔：500ms, 1000ms
           const retryDelay = attempt === 1 ? 500 : 1000;
           console.log(`[findUserByUuid] 网络/超时错误，${retryDelay}ms 后重试...`);
+
+          // 在第二次重试时重置连接（更保守的策略）
+          if (attempt === 2) {
+            console.log(`[findUserByUuid] 重置数据库连接`);
+            resetSupabaseClient();
+          }
+
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           continue;
         }
@@ -142,16 +146,24 @@ export async function findUserByUuid(uuid: string): Promise<User | undefined> {
 
       // 如果还有重试机会，继续重试
       if (attempt < maxRetries) {
-        const retryDelay = attempt === 1 ? 500 : 1000;
+        const retryDelay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
         console.log(`[findUserByUuid] 异常错误，${retryDelay}ms 后重试...`);
+
+        // 在第二次重试时重置连接
+        if (attempt === 2) {
+          console.log(`[findUserByUuid] 重置数据库连接`);
+          resetSupabaseClient();
+        }
+
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         continue;
       }
     }
   }
 
-  console.error(`[findUserByUuid] 所有重试都失败了, UUID: ${uuid}, 最后错误:`, lastError);
-  return undefined;
+    console.error(`[findUserByUuid] 所有重试都失败了, UUID: ${uuid}, 最后错误:`, lastError);
+    return undefined;
+  });
 }
 
 export async function getUsers(
