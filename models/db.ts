@@ -41,12 +41,12 @@ export function getSupabaseClient() {
   });
 
   // 轻量级预热连接
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' && supabaseClient) {
     setTimeout(async () => {
       try {
         console.log("[getSupabaseClient] 预热数据库连接...");
         // 使用最简单的查询进行预热
-        await supabaseClient
+        await supabaseClient!
           .from('users')
           .select('uuid')
           .limit(1);
