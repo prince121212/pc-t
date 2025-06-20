@@ -29,7 +29,7 @@ export default function Blog({ blog }: { blog: BlogType }) {
               className="w-full md:w-1/3 p-4"
             >
               <div className="flex flex-col overflow-clip rounded-xl border border-border">
-                {item.cover_url && (
+                {item.cover_url && item.cover_url.trim() !== "" && (
                   <div>
                     <img
                       src={item.cover_url}

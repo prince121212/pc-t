@@ -94,7 +94,7 @@ export default function Header({ header }: { header: HeaderType }) {
                                       {iitem.icon && (
                                         <Icon
                                           name={iitem.icon}
-                                          className="size-5 shrink-0"
+                                          className="size-5 shrink-0 self-start mt-2"
                                         />
                                       )}
                                       <div>
@@ -234,7 +234,7 @@ export default function Header({ header }: { header: HeaderType }) {
                                   {iitem.icon && (
                                     <Icon
                                       name={iitem.icon}
-                                      className="size-4 shrink-0"
+                                      className="size-4 shrink-0 self-start mt-1.5"
                                     />
                                   )}
                                   <div>

@@ -23,37 +23,22 @@
           "icon": "MdPayment"
         },
         {
-          "title": "Showcase",
+          "title": "More Info",
           "url": "/#showcase",
           "icon": "BiCube",
           "children": [
             {
-              "title": "AI Wallpaper Shop",
-              "description": "AI Wallpaper Generator",
-              "icon": "MdOutlineWallpaper",
-              "url": "https://aiwallpaper.shop",
-              "target": "_blank"
-            },
-            {
-              "title": "AI Cover Generator",
-              "description": "AI Cover Generator",
-              "icon": "",
-              "url": "https://aicover.design",
+              "title": "Blog",
+              "description": "Blog & News",
+              "icon": "RiArticleLine",
+              "url": "/posts",
               "target": "_blank"
             }
           ]
         }
       ]
     },
-    "buttons": [
-      {
-        "title": "Get ShipAny",
-        "url": "https://shipany.ai",
-        "target": "_blank",
-        "variant": "link",
-        "icon": "RiArrowRightUpLine"
-      }
-    ],
+    "buttons": [],
     "show_sign": true,
     "show_theme": true,
     "show_locale": true
@@ -286,21 +271,12 @@
         }
       },
       {
-        "title": "AI Wallpaper",
-        "description": "AI Wallpaper Generator",
-        "url": "https://aiwallpaper.shop",
+        "title": "Personal Blog",
+        "description": "Blog & News",
+        "url": "/posts",
         "target": "_blank",
         "image": {
           "src": "/imgs/showcases/1.png"
-        }
-      },
-      {
-        "title": "AI Cover",
-        "description": "AI Cover Generator",
-        "url": "https://aicover.design",
-        "target": "_blank",
-        "image": {
-          "src": "/imgs/showcases/2.png"
         }
       },
       {

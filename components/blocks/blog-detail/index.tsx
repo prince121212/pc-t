@@ -16,7 +16,7 @@ export default function BlogDetail({ post }: { post: Post }) {
           {post.title}
         </h1>
         <div className="flex items-center gap-3 text-sm md:text-base">
-          {post.author_avatar_url && (
+          {post.author_avatar_url && post.author_avatar_url.trim() !== "" && (
             <Avatar className="h-8 w-8 border">
               <AvatarImage
                 src={post.author_avatar_url}
